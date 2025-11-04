@@ -1,13 +1,23 @@
 import { useLocalSearchParams } from "expo-router";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { pets } from "../data/pets";
+import { getPetById } from "../api/pets";
+import { Pet } from "../data/pets";
 
 export default function PetDetails() {
   const { id } = useLocalSearchParams();
+  const [pet, setPet] = useState<Pet | null>(null);
 
-  const pet = pets.find((p) => p.id === Number(id));
+  const handleGetPetById = async () => {
+    const petData = await getPetById(id as string);
+    console.log(petData);
+    setPet(petData);
+  };
+
+  useEffect(() => {
+    handleGetPetById();
+  }, [id]);
 
   if (!pet) {
     return (
