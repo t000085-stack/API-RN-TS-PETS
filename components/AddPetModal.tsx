@@ -1,3 +1,4 @@
+import { useMutation } from "@tanstack/react-query";
 import React, { useState } from "react";
 import {
   KeyboardAvoidingView,
@@ -9,40 +10,61 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { addPet } from "../api/pets";
 import { Pet } from "../data/pets";
 
 interface AddPetModalProps {
   visible: boolean;
   onClose: () => void;
   onAdd: (pet: Pet) => void;
+  refetch: () => void;
 }
 
 export const AddPetModal: React.FC<AddPetModalProps> = ({
   visible,
   onClose,
   onAdd,
+  refetch,
 }) => {
   const [name, setName] = useState("");
   const [type, setType] = useState("");
   const [adopted, setAdopted] = useState("");
   const [image, setImage] = useState("");
 
-  const handleAdd = () => {
-    if (name.trim() && type.trim()) {
-      const maxId = Date.now(); // Generate unique ID using rtimestamp
-      onAdd({
-        id: maxId,
-        name: name.trim(),
-        type: type.trim(),
-        adopted: adopted.trim() || "No",
-        image: image.trim() || "https://images.unsplash.com/photo-1450778869180-41d0601e046e?w=400&h=400&fit=crop",
-      });
-      // Reset form
-      setName("");
-      setType("");
-      setAdopted("");
-      setImage("");
+  const { mutate } = useMutation({
+    mutationKey: ["addpet"],
+    mutationFn: (pet: Pet) =>
+      addPet(pet.name, pet.image, pet.type, pet.adopted),
+    onSuccess: () => {
+      alert("test ");
+      refetch();
       onClose();
+    },
+  });
+
+  const handleAdd = async () => {
+    if (name.trim() && type.trim()) {
+      try {
+        mutate({ id: 0, name, image, type, adopted });
+
+        // onAdd({
+        //   id: newPet.id,
+        //   name: newPet.name,
+        //   type: newPet.type,
+        //   adopted: newPet.adopted,
+        //   image: newPet.image,
+        // });
+
+        // Reset form
+        setName("");
+        setType("");
+        setAdopted("");
+        setImage("");
+        onClose();
+      } catch (error) {
+        console.error("Error adding pet:", error);
+        // Handle error (you might want to show an error message to the user)
+      }
     }
   };
 
@@ -216,4 +238,3 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 });
-

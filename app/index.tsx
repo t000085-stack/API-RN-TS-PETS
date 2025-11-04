@@ -1,4 +1,5 @@
 import { getAllPets } from "@/api/pets";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import React, { useState } from "react";
 import {
@@ -15,6 +16,7 @@ import { pets as initialPets, Pet } from "../data/pets";
 
 export default function Index() {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [pets, setPets] = useState<Pet[]>(initialPets);
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -25,7 +27,10 @@ export default function Index() {
   const handleAddPet = (newPet: Pet) => {
     setPets([newPet, ...pets]);
   };
-
+  const { data, isPending, refetch } = useQuery({
+    queryKey: ["All Pets"],
+    queryFn: getAllPets,
+  });
   const getPets = async () => {
     const allPet = await getAllPets();
     setPets(allPet);
@@ -45,13 +50,13 @@ export default function Index() {
 
       <SafeAreaView style={styles.container} edges={["bottom"]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {pets.length === 0 ? (
+          {!data || data.length === 0 ? (
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyText}>No pets yet!</Text>
               <Text style={styles.emptySubtext}>Start by adding a new pet</Text>
             </View>
           ) : (
-            pets.map((pet) => (
+            data?.map((pet: Pet) => (
               <PetCard
                 key={pet.id}
                 pet={pet}
@@ -64,6 +69,7 @@ export default function Index() {
           visible={modalVisible}
           onClose={() => setModalVisible(false)}
           onAdd={handleAddPet}
+          refetch={refetch}
         />
       </SafeAreaView>
     </>

@@ -1,18 +1,38 @@
-import { useLocalSearchParams } from "expo-router";
+import { useMutation } from "@tanstack/react-query";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useEffect, useState } from "react";
-import { Image, ScrollView, StyleSheet, Text, View } from "react-native";
+import {
+  Image,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { getPetById } from "../api/pets";
+import { deletePet, getPetById } from "../api/pets";
 import { Pet } from "../data/pets";
 
 export default function PetDetails() {
   const { id } = useLocalSearchParams();
+  const router = useRouter();
   const [pet, setPet] = useState<Pet | null>(null);
 
   const handleGetPetById = async () => {
     const petData = await getPetById(id as string);
     console.log(petData);
     setPet(petData);
+  };
+
+  const { mutate } = useMutation({
+    mutationFn: (petId: string) => deletePet(petId),
+    onSuccess: () => {
+      router.push("/");
+    },
+  });
+
+  const handleDelete = () => {
+    mutate(id as string);
   };
 
   useEffect(() => {
@@ -67,6 +87,10 @@ export default function PetDetails() {
             </Text>
           </View>
         </View>
+
+        <TouchableOpacity style={styles.deleteButton} onPress={handleDelete}>
+          <Text style={styles.deleteButtonText}>Delete Pet</Text>
+        </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>
   );
@@ -156,5 +180,19 @@ const styles = StyleSheet.create({
   errorText: {
     fontSize: 18,
     color: "#666",
+  },
+  deleteButton: {
+    backgroundColor: "#DC3545",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 8,
+    marginHorizontal: 20,
+    marginTop: 20,
+    alignItems: "center",
+  },
+  deleteButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 });
